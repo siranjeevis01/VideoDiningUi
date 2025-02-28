@@ -4,29 +4,47 @@ import axios from "axios";
 const Payment = () => {
   const [email, setEmail] = useState("");
   const [groupOrderId, setGroupOrderId] = useState("");
+  const [orderId, setOrderId] = useState("N/A");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const [otpCooldown, setOtpCooldown] = useState(0);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  const [orderId, setOrderId] = useState("N/A");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [razorpaySignature, setRazorpaySignature] = useState("");
   const [error, setError] = useState("");
+  const [orderItems, setOrderItems] = useState([]); // Declare orderItems state
 
   useEffect(() => {
+    // Fetch the latest order details
     axios
       .get("https://localhost:7179/api/orders/get-latest-group-order")
       .then((res) => {
         console.log("Order API Response:", res.data);
-
         if (res.data.groupOrderId) {
           setGroupOrderId(res.data.groupOrderId);
+          setOrderId(res.data.orderId || "N/A");
+
+          // Fetch the order items based on the orderId
+          axios
+          .get(`https://localhost:7179/api/orders/get-items/${res.data.orderId}`)
+          .then((itemsRes) => {
+            console.log("Items API Response:", itemsRes.data);
+            setOrderItems(itemsRes.data.items || []);
+          })
+          .catch((itemsErr) => {
+            console.error("Error Fetching Order Items:", itemsErr);
+            setError("Failed to fetch order items.");
+          });        
+
         } else {
           setError("Group Order ID is missing. Please place an order first.");
         }
-
-        setOrderId(res.data.orderId || "N/A");
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("API Error:", err.response || err);
         setError("No recent group orders found. Please create an order first.");
       });
   }, []);
@@ -36,14 +54,20 @@ const Payment = () => {
       setError("Email and Group Order ID are required!");
       return;
     }
+
     setError("");
+    setIsSendingOtp(true);
 
     try {
       const res = await axios.post("https://localhost:7179/api/Payment/send-otp", { email, groupOrderId });
       console.log("OTP Sent Response:", res.data);
 
+      if (res.data.razorpaySignature) {
+        setRazorpaySignature(res.data.razorpaySignature); // Store Razorpay Signature
+      }
+
       setOtpSent(true);
-      setOtpCooldown(30);
+      setOtpCooldown(300);
 
       const countdown = setInterval(() => {
         setOtpCooldown((prev) => {
@@ -56,7 +80,9 @@ const Payment = () => {
       }, 1000);
     } catch (err) {
       console.error("OTP Sending Error:", err);
-      setError("Failed to send OTP.");
+      setError("Failed to send OTP. Please try again.");
+    } finally {
+      setIsSendingOtp(false);
     }
   };
 
@@ -67,27 +93,63 @@ const Payment = () => {
     }
 
     setError("");
+    setIsVerifyingOtp(true);
+
+    if (!razorpaySignature) {
+      setError("Missing Razorpay Signature!");
+      return;
+    }
+
     try {
-      const res = await axios.post("https://localhost:7179/api/Payment/verify-otp", {
+      const payload = {
         email,
         otp,
         groupOrderId,
-      });
+        RazorpaySignature: razorpaySignature,
+      };
 
+      const res = await axios.post("https://localhost:7179/api/Payment/verify-otp", payload);
       console.log("OTP Verification Response:", res.data);
       alert(res.data.message);
-      setOtpSent(res.data.message === "OTP verified successfully!");
+
+      if (res.data.message === "OTP verified successfully!") {
+        setOtpVerified(true);
+      } else {
+        setError("Invalid OTP. Please try again.");
+        setOtpVerified(false);
+      }
     } catch (err) {
       console.error("OTP Verification Error:", err.response?.data);
       setError(err.response?.data?.message || "Invalid OTP. Please try again.");
-      setOtpSent(false);
+      setOtpVerified(false);
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handlePaymentError = (error) => {
+    if (error.response) {
+      console.error("Payment API Error:", error.response.data);
+      setError(`Payment failed: ${error.response.data.message}`);
+    } else if (error.request) {
+      console.error("Payment API Error:", error.request);
+      setError("Payment failed: No response from server.");
+    } else {
+      console.error("Payment API Error:", error.message);
+      setError("Payment failed: Unknown error.");
     }
   };
 
   const processPayment = async () => {
-    if (!email || !otp || !groupOrderId || !orderId) {
-      console.error("Missing Fields:", { email, otp, groupOrderId, orderId });
+    if (!email || !otp || !groupOrderId || !orderId || !razorpaySignature) {
+      console.error("Missing Fields:", { email, otp, groupOrderId, orderId, razorpaySignature });
       setError("All fields are required for payment!");
+      return;
+    }
+
+    // Check if orderItems exist and are not empty
+    if (!orderItems || orderItems.length === 0) {
+      setError("No items found in your order. Please add items to your cart.");
       return;
     }
 
@@ -100,20 +162,22 @@ const Payment = () => {
       groupOrderId,
       paymentDetails: "Razorpay",
       orderId,
+      RazorpaySignature: razorpaySignature,
     };
 
     console.log("Sending Payment Payload:", payload);
 
     try {
       const res = await axios.post("https://localhost:7179/api/Payment/process-payment", payload, {
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`  // Add token here if needed
+        },
       });
-
       console.log("Payment Success Response:", res.data);
       setPaymentSuccess(true);
     } catch (err) {
-      console.error("Payment Error:", err.response?.data);
-      setError(err.response?.data?.message || "Payment failed.");
+      handlePaymentError(err);
     } finally {
       setIsPaying(false);
     }
@@ -134,19 +198,21 @@ const Payment = () => {
       <label>Order ID:</label>
       <input type="text" value={orderId} disabled style={styles.inputDisabled} />
 
-      <button onClick={sendOtp} style={styles.button} disabled={otpCooldown > 0}>
-        {otpCooldown > 0 ? `Resend OTP (${otpCooldown}s)` : otpSent ? "Resend OTP" : "Send OTP"}
+      <button onClick={sendOtp} style={isSendingOtp || otpCooldown > 0 ? styles.buttonDisabled : styles.button} disabled={isSendingOtp || otpCooldown > 0}>
+        {isSendingOtp ? "Sending..." : otpCooldown > 0 ? `Resend OTP (${otpCooldown}s)` : "Send OTP"}
       </button>
 
       {otpSent && (
         <>
           <label>Enter OTP:</label>
           <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} style={styles.input} />
-          <button onClick={verifyOtp} style={styles.button}>Verify OTP</button>
+          <button onClick={verifyOtp} style={isVerifyingOtp ? styles.buttonDisabled : styles.button} disabled={isVerifyingOtp}>
+            {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
+          </button>
         </>
       )}
 
-      {otpSent && !paymentSuccess && (
+      {otpVerified && !paymentSuccess && (
         <button onClick={processPayment} style={isPaying ? styles.buttonDisabled : styles.button} disabled={isPaying}>
           {isPaying ? "Processing..." : "Pay with Razorpay"}
         </button>
@@ -164,8 +230,9 @@ const styles = {
     borderRadius: "10px",
     boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
     textAlign: "center",
+    backgroundColor: "#fff",
   },
-  title: { fontSize: "22px", marginBottom: "10px" },
+  title: { fontSize: "22px", marginBottom: "10px", color: "#333" },
   input: {
     width: "100%",
     padding: "8px",
@@ -185,19 +252,34 @@ const styles = {
     width: "100%",
     padding: "10px",
     marginTop: "10px",
-    borderRadius: "5px",
+    backgroundColor: "#28a745",
+    color: "#fff",
     border: "none",
-    backgroundColor: "#007bff",
-    color: "white",
+    borderRadius: "5px",
     cursor: "pointer",
     fontSize: "16px",
   },
   buttonDisabled: {
-    backgroundColor: "#aaa",
+    width: "100%",
+    padding: "10px",
+    marginTop: "10px",
+    backgroundColor: "#ddd",
+    color: "#999",
+    border: "none",
+    borderRadius: "5px",
     cursor: "not-allowed",
+    fontSize: "16px",
   },
-  successMessage: { color: "green", fontSize: "16px", marginTop: "10px" },
-  errorMessage: { color: "red", fontSize: "16px", marginTop: "10px" },
+  successMessage: {
+    color: "green",
+    fontSize: "18px",
+    marginTop: "10px",
+  },
+  errorMessage: {
+    color: "red",
+    fontSize: "14px",
+    marginTop: "10px",
+  },
 };
 
 export default Payment;

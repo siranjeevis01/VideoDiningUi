@@ -6,11 +6,13 @@ import "../../styles/Profile.css";
 const Profile = ({ user }) => {
   const [profileData, setProfileData] = useState(null);
   const [avatar, setAvatar] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       setProfileData(user);
       setLoading(false);
     } else {
@@ -25,22 +27,20 @@ const Profile = ({ user }) => {
         setMessage({ type: "danger", text: "Please log in to view your profile." });
         return;
       }
-  
+
       const response = await axios.get("https://localhost:7179/api/users/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`, 
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       setProfileData(response.data);
     } catch (error) {
       console.error("Error fetching user data", error);
-      setMessage({ type: "danger", text: "Unauthorized or session expired. Please log in again." });
-      localStorage.removeItem("token"); 
+      setMessage({ type: "danger", text: "Session expired. Please log in again." });
+      localStorage.removeItem("token");
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   const handleChange = (e) => {
     setProfileData((prevData) => ({
@@ -68,24 +68,34 @@ const Profile = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!profileData || !profileData.name || !profileData.email) {
+    if (!profileData?.name || !profileData?.email) {
       setMessage({ type: "danger", text: "Name and email cannot be empty!" });
+      return;
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      setMessage({ type: "danger", text: "Passwords do not match!" });
       return;
     }
 
     setLoading(true);
     const formData = new FormData();
-    formData.append("id", profileData.id); 
+    formData.append("id", profileData.id);
     formData.append("name", profileData.name);
     formData.append("email", profileData.email);
     formData.append("phoneNumber", profileData.phoneNumber || "");
-    formData.append("newPassword", profileData.newPassword || "");
+    if (newPassword) formData.append("newPassword", newPassword);
     if (avatar) formData.append("avatar", avatar);
 
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.put("https://localhost:7179/api/users/update", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
+
       setMessage({ type: "success", text: "Profile updated successfully!" });
       console.log("Profile Update Response:", response.data);
     } catch (error) {
@@ -144,6 +154,18 @@ const Profile = ({ user }) => {
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control type="email" name="email" value={profileData?.email || ""} onChange={handleChange} required />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Phone Number</Form.Label>
+              <Form.Control type="text" name="phoneNumber" value={profileData?.phoneNumber || ""} onChange={handleChange} />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>New Password</Form.Label>
+              <Form.Control type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Confirm Password</Form.Label>
+              <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Profile Picture</Form.Label>

@@ -3,33 +3,69 @@ import axios from "axios";
 
 const VideoCall = ({ user }) => {
   const [calls, setCalls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (user) {
-      axios.get("https://localhost:7179/api/video-calls/active-calls").then((res) => setCalls(res.data));
+    if (!user?.token) return;
+
+    const fetchCalls = async () => {
+      try {
+        const res = await axios.get("https://localhost:7179/api/video-calls/active-calls", {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        setCalls(res.data || []);
+      } catch (err) {
+        console.error("Error fetching video calls:", err);
+        setError("Failed to load video calls.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCalls();
+  }, [user?.token]);
+
+  const handleCallAction = async (id, action) => {
+    try {
+      await axios.post(`https://localhost:7179/api/video-calls/${action}/${id}`, null, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      alert(`Call ${action === "accept" ? "Accepted" : "Rejected"}`);
+      setCalls((prevCalls) => prevCalls.filter((call) => call.id !== id)); // Remove call from list
+    } catch (err) {
+      console.error(`Error ${action}ing call:`, err);
+      alert(`Failed to ${action} call.`);
     }
-  }, [user]);
-
-  const acceptCall = async (id) => {
-    await axios.post(`https://localhost:7179/api/video-calls/accept/${id}`);
-    alert("Call Accepted");
   };
 
-  const rejectCall = async (id) => {
-    await axios.post(`https://localhost:7179/api/video-calls/reject/${id}`);
-    alert("Call Rejected");
-  };
+  if (loading) return <p>Loading calls...</p>;
+  if (error) return <p className="text-danger">{error}</p>;
 
   return (
-    <div>
+    <div className="container mt-3">
       <h2>Video Calls</h2>
-      {calls.length === 0 ? <p>No active calls</p> : (
-        <ul>
+      {calls.length === 0 ? (
+        <p className="alert alert-info">No active calls</p>
+      ) : (
+        <ul className="list-group">
           {calls.map((call) => (
-            <li key={call.id}>
+            <li key={call.id} className="list-group-item d-flex justify-content-between align-items-center">
               {call.user} is calling...
-              <button onClick={() => acceptCall(call.id)}>Accept</button>
-              <button onClick={() => rejectCall(call.id)}>Reject</button>
+              <div>
+                <button
+                  className="btn btn-success me-2"
+                  onClick={() => handleCallAction(call.id, "accept")}
+                >
+                  Accept
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleCallAction(call.id, "reject")}
+                >
+                  Reject
+                </button>
+              </div>
             </li>
           ))}
         </ul>

@@ -1,11 +1,18 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]); // Sync cart with localStorage
 
   const addToCart = (food) => {
     setCart((prevCart) => {
@@ -37,14 +44,18 @@ export const CartProvider = ({ children }) => {
         item.id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
           : item
-      )
+      ).filter((item) => item.quantity > 0) // Prevents negative quantity
     );
+  };
+
+  const clearCart = () => {
+    setCart([]);
   };
 
   const getTotalAmount = () => {
     return cart.reduce((total, item) => total + item.price * item.quantity, 0);
   };
-  
+
   return (
     <CartContext.Provider
       value={{
@@ -53,7 +64,8 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQuantity,
         decreaseQuantity,
-        getTotalAmount, // ✅ Make sure to include this
+        getTotalAmount,
+        clearCart, // ✅ Added clearCart function
       }}
     >
       {children}

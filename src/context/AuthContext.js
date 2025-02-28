@@ -9,8 +9,15 @@ export const AuthProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
-  }, [user]); // Sync localStorage whenever user state changes
+    if (user && user.token) {
+      const tokenExpiry = JSON.parse(atob(user.token.split(".")[1])).exp * 1000;
+      const now = Date.now();
+
+      if (tokenExpiry <= now) {
+        logout();
+      }
+    }
+  }, [user]); // Check token expiry when user state changes
 
   const login = async (credentials) => {
     try {
@@ -21,13 +28,16 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
       }
 
       const data = await response.json();
       setUser(data);
+      localStorage.setItem("user", JSON.stringify(data));
     } catch (error) {
       console.error("Login error:", error);
+      throw error; // Allow error handling in components
     }
   };
 

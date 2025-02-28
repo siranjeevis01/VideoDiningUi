@@ -1,10 +1,9 @@
-// src/routes/AdminRoute.js
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const AdminRoute = ({ element }) => {
+const AdminRoute = () => {
   const { user } = useAuth();
-  return user && user.role === "admin" ? element : <Navigate to="/" />;
+  return user && user.role === "admin" ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 export default AdminRoute;

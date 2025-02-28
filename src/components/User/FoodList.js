@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../../context/CartContext";
 
 const FoodList = () => {
@@ -22,13 +21,13 @@ const FoodList = () => {
             name: food.Name,
             price: food.Price,
             description: food.Description || "No description available",
-            category: food.Category || "Unknown",
-            imageUrl: food.ImageUrl || "/images/default-food.jpg",
+            category: food.Category ? food.Category.toLowerCase() : "unknown",
+            imageUrl: food.ImageUrl?.trim() ? food.ImageUrl : "/images/default-food.jpg",
           }));
           setFoods(formattedFoods);
           setFilteredFoods(formattedFoods);
         } else {
-          console.error("Unexpected API response format:", response.data);
+          console.error("Unexpected API response:", response.data);
           setFoods([]);
           setFilteredFoods([]);
         }
@@ -43,13 +42,12 @@ const FoodList = () => {
     fetchFoods();
   }, []);
 
-  // Handle search & filter changes
   useEffect(() => {
     setFilteredFoods(
       foods.filter(
         (food) =>
           food.name.toLowerCase().includes(search.toLowerCase()) &&
-          (filter === "" || food.category === filter)
+          (filter === "" || food.category.toLowerCase() === filter.toLowerCase())
       )
     );
   }, [search, filter, foods]);
@@ -61,7 +59,6 @@ const FoodList = () => {
     <div className="container mt-4">
       <h2 className="text-center mb-4">Explore Our Delicious Foods</h2>
       
-      {/* Search & Filter */}
       <div className="row mb-3">
         <div className="col-md-6">
           <input
@@ -75,13 +72,12 @@ const FoodList = () => {
         <div className="col-md-6">
           <select className="form-control" onChange={(e) => setFilter(e.target.value)}>
             <option value="">All Categories</option>
-            <option value="Veg">Veg</option>
-            <option value="Non-Veg">Non-Veg</option>
+            <option value="veg">Veg</option>
+            <option value="non-veg">Non-Veg</option>
           </select>
         </div>
       </div>
 
-      {/* Food Cards */}
       <div className="row">
         {filteredFoods.length > 0 ? (
           filteredFoods.map((food) => (
@@ -91,10 +87,7 @@ const FoodList = () => {
                   src={food.imageUrl}
                   className="card-img-top food-image"
                   alt={food.name}
-                  onError={(e) => {
-                    e.target.onerror = null; 
-                    e.target.src = "/images/default-food.jpg"; 
-                  }}
+                  onError={(e) => (e.target.src = "/images/default-food.jpg")}
                   loading="lazy"
                 />
                 <div className="card-body d-flex flex-column">

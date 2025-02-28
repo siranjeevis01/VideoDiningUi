@@ -1,10 +1,11 @@
 import React from "react";
 import { useCart } from "../../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Checkout = () => {
   const { cart, getTotalAmount } = useCart();
   const navigate = useNavigate();
+  const { groupOrderID } = useParams();  // Get groupOrderID from URL
 
   if (cart.length === 0) {
     return (
@@ -36,9 +37,17 @@ const Checkout = () => {
         <div className="col-md-4">
           <div className="card shadow-sm p-3">
             <h4>Total Amount: ₹{getTotalAmount()}</h4>
-            <button className="btn btn-success w-100 mt-3" onClick={() => navigate("/payment")}>
+
+            <button 
+              className="btn btn-success w-100 mt-3"
+              onClick={() => navigate("/payment", { state: { groupOrderID } })}
+              disabled={!groupOrderID}
+            >
               Proceed to Payment
             </button>
+
+            {!groupOrderID && <p className="text-danger mt-2">Group Order ID is missing!</p>}
+
             <button className="btn btn-secondary w-100 mt-2" onClick={() => navigate("/cart")}>
               Back to Cart
             </button>

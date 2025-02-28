@@ -1,6 +1,9 @@
-import React from "react";
 import { Routes, Route } from "react-router-dom";
+import PrivateRoute from "./PrivateRoute";
+import AdminRoute from "./AdminRoute";
 import Home from "../components/User/Home";
+import ResetPassword from "../components/Auth/ResetPassword"; 
+import UpdateResetPassword from "../components/Auth/UpdateResetPassword";
 import FoodList from "../components/User/FoodList";
 import OrderHistory from "../components/User/OrderHistory";
 import VideoCall from "../components/User/VideoCall";
@@ -18,9 +21,6 @@ import ManageOrders from "../components/Admin/ManageOrders";
 import ManageFood from "../components/Admin/ManageFood";  
 import ManagePayments from "../components/Admin/ManagePayments"; 
 
-import PrivateRoute from "./PrivateRoute";
-import AdminRoute from "./AdminRoute";
-
 const AppRoutes = () => {
   return (
     <Routes>
@@ -30,22 +30,28 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
 
       {/* User Routes (Protected) */}
-      <Route path="/foods" element={<PrivateRoute element={<FoodList />} />} />
-      <Route path="/orders" element={<PrivateRoute element={<OrderHistory />} />} />
-      <Route path="/cart" element={<PrivateRoute element={<Cart />} />} />
-      <Route path="/checkout" element={<PrivateRoute element={<Checkout />} />} />
-      <Route path="/payment" element={<PrivateRoute element={<Payment />} />} /> 
-      <Route path="/video-call" element={<PrivateRoute element={<VideoCall />} />} />
-      <Route path="/profile" element={<PrivateRoute element={<Profile />} />} />
-      <Route path="/friends" element={<PrivateRoute element={<Friends />} />} />
-      <Route path="/user" element={<PrivateRoute element={<UserDashboard />} />} />
+      <Route path="/" element={<PrivateRoute />}>
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/Update-reset-password/:token" element={<UpdateResetPassword />} />
+        <Route path="foods" element={<FoodList />} />
+        <Route path="orders" element={<OrderHistory />} />
+        <Route path="cart" element={<Cart />} />
+        <Route path="checkout/:groupOrderID" element={<Checkout />} />
+        <Route path="payment" element={<Payment />} /> 
+        <Route path="video-call" element={<VideoCall />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="friends" element={<Friends />} />
+        <Route path="user" element={<UserDashboard />} />
+      </Route>
 
       {/* Admin Routes (Protected) */}
-      <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
-      <Route path="/admin/users" element={<AdminRoute element={<ManageUsers />} />} />
-      <Route path="/admin/orders" element={<AdminRoute element={<ManageOrders />} />} />
-      <Route path="/admin/food" element={<AdminRoute element={<ManageFood />} />} />
-      <Route path="/admin/payments" element={<AdminRoute element={<ManagePayments />} />} />
+      <Route path="/admin" element={<AdminRoute />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<ManageUsers />} />
+        <Route path="orders" element={<ManageOrders />} />
+        <Route path="food" element={<ManageFood />} />
+        <Route path="payments" element={<ManagePayments />} />
+      </Route>
     </Routes>
   );
 };
