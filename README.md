@@ -1,74 +1,237 @@
-<<<<<<< HEAD
-# Getting Started with Create React App
+# 🍽️ VideoDiningApp
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack web application that combines **online food ordering** with **virtual dining**, enabling users to place food orders, invite friends, and enjoy a meal together via live video calls — from the comfort of their homes.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🔗 Live Demo
 
-### `npm start`
+> 🚧 **Coming Soon**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 📚 Table of Contents
 
-### `npm test`
+- [About the Project](#about-the-project)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [API Overview](#api-overview)
+- [Getting Started](#getting-started)
+- [Screenshots](#screenshots)
+- [Future Enhancements](#future-enhancements)
+- [Contact](#contact)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 📌 About the Project
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**VideoDiningApp** brings a new dimension to food delivery platforms by adding a **social experience**. It supports:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Ordering food online
+- Inviting friends
+- Dining together via video calls
+- Secure OTP-based payments
+- Admin controls for managing platform content and users
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+This app is ideal for virtual hangouts, remote celebrations, or online dining dates.
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## ✨ Features
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 👤 Authentication
+- Secure login/register
+- JWT-based session handling
+- Email/OTP verification (optional)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 🛍️ Food Ordering
+- Browse food menu
+- Add/remove items to cart
+- Place and track orders
+- View order history and status
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 💳 Payment System
+- OTP-based payment verification
+- Secure confirmation via email/SMS
+- Track successful transactions
 
-## Learn More
+### 👥 Friends Module
+- Add/accept/reject/remove friends
+- View friend list
+- View pending requests and friendship status
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 🎥 Virtual Dining (Video Call)
+- Start/end video calls with friends
+- Track participants
+- View call history
+> _(WebRTC integration planned)_
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 🧑‍💼 Admin Panel
+- Dashboard metrics (users, orders, revenue)
+- Manage users, food items, orders, and payments
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🛠️ Tech Stack
 
-### Analyzing the Bundle Size
+| Layer       | Tech Used                          |
+|-------------|------------------------------------|
+| Frontend    | React.js, Tailwind CSS, Axios      |
+| Backend     | ASP.NET Core Web API               |
+| Database    | SQL Server                         |
+| Auth        | JWT, ASP.NET Identity (optional)   |
+| Video Calls | WebRTC / SignalR (planned)         |
+| Tools       | Swagger, Postman, Git, VS Code     |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 📁 Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```text
+VideoDiningApp/
+├── VideoDining/         # ASP.NET Core backend
+│   ├── Controllers/
+│   ├── DTOs/
+│   ├── Models/
+│   ├── Services/
+│   ├── Program.cs
+│   ├── appsettings.json
+│   └── VideoDiningApp.csproj
+│
+├── VideoDiningUi/       # React frontend
+│   ├── public/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── App.js
+│   │   └── index.js
+│   ├── .env
+│   └── package.json
+```
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 📡 API Overview
 
-### Deployment
+> **Swagger:** `http://localhost:5289/swagger/index.html`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Admin
+- `GET /api/admin/dashboard`
+- `POST /api/admin/login`
+- `GET /api/admin/users`
+- `DELETE /api/admin/users/{id}`
+- `GET/POST/PUT/DELETE /api/admin/foods`
+- `GET /api/admin/orders`
+- `PUT /api/admin/orders/{orderId}`
+- `GET /api/admin/payments`
 
-### `npm run build` fails to minify
+### Auth
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/verify`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-=======
-# VideoDiningUi
->>>>>>> e726c4fcaf41704aa51554baed6486865531f95f
+### Cart
+- `GET /api/cart/{userId}`
+- `POST /api/cart/add`
+- `DELETE /api/cart/remove/{cartItemId}`
+
+### Food
+- `GET /api/foods`
+
+### Friends
+- `POST /api/friends/add|accept|reject`
+- `DELETE /api/friends/remove`
+- `GET /api/friends/list/{userId}`
+- `GET /api/friends/check/{userId}/{friendId}`
+- `GET /api/friends/requests/{userId}`
+
+### Orders
+- `POST /api/orders/create/{userId}`
+- `GET /api/orders`
+- `GET /api/orders/history/{userId}`
+- `GET /api/orders/status/{orderId}`
+- `POST /api/orders/update-status/{orderId}`
+- `POST /api/orders/mark-delivered/{orderId}/{userId}`
+- `POST /api/orders/remind/{orderId}`
+- `DELETE /api/orders/cancel/{orderId}/{userId}`
+
+### Payments
+- `POST /api/payment/send-links`
+- `POST /api/payment/verifyOtp`
+- `POST /api/payment/generateOtp`
+- `POST /api/payment/confirm-payment`
+- `POST /api/payment/pay/{orderId}`
+- `POST /api/payment/success`
+
+### Video Call
+- `POST /api/video-call/start`
+- `POST /api/video-call/end`
+- `GET /api/video-call/{orderId}/participants`
+- `GET /api/video-call/{orderId}`
+- `GET /api/video-call/history/{userId}`
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js + npm
+- .NET 6 SDK
+- SQL Server
+- Visual Studio or VS Code
+
+### 🔧 Setup
+
+#### 1. Clone the repository
+```bash
+git clone https://github.com/siranjeevis01/VideoDiningApp.git
+cd VideoDiningApp
+```
+
+#### 2. Run the Frontend
+```bash
+cd VideoDiningUi
+npm install
+npm start
+```
+
+#### 3. Run the Backend
+```bash
+cd ../VideoDining
+dotnet restore
+dotnet ef database update
+dotnet run
+```
+
+#### 4. Access App
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5289/swagger`
+
+---
+
+## 🖼️ Screenshots
+(Add screenshots here of login, dashboard, video call, etc.)
+
+---
+
+## 🔮 Future Enhancements
+- [x] Real-time chat during calls
+- [x] Google & Facebook OAuth login
+- [x] Push notifications
+- [x] Dish reviews & ratings
+- [x] Order tracking on map
+- [x] Mobile responsive design
+
+---
+
+## 🤝 Contact
+
+**👤 Created by:** Siranjeevi  
+**📧 Email:** siranjeeviwd@gmail.com  
+**💼 LinkedIn:** [linkedin.com/in/siranjeevis01](https://linkedin.com/in/siranjeevis01)  
+**💻 GitHub:** [github.com/siranjeevis01](https://github.com/siranjeevis01)
+
+
